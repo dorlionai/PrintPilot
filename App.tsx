@@ -6,7 +6,6 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ===== RENKLER =====
 const C = {
   bg: '#0f0f1a', card: '#1a1a2e', surface: '#16213e',
   primary: '#6C5CE7', secondary: '#00CEC9', gold: '#F9CA24',
@@ -14,28 +13,20 @@ const C = {
   text: '#FFFFFF', sub: '#A0A0B0', border: '#2D2D4E',
 };
 
-// ===== VERİ YÖNETIMI - AsyncStorage =====
 const KEYS = {
-  siparisler: 'pp_siparisler',
-  musteriler: 'pp_musteriler',
-  stok: 'pp_stok',
-  ayarlar: 'pp_ayarlar',
-  onboarding: 'pp_onboarding',
-  gunlukCalc: 'pp_gunluk_calc',
+  siparisler: 'pp_siparisler', musteriler: 'pp_musteriler',
+  stok: 'pp_stok', ayarlar: 'pp_ayarlar',
+  onboarding: 'pp_onboarding', gunlukCalc: 'pp_gunluk_calc',
 };
 
 async function loadData(key: string, fallback: any) {
-  try {
-    const val = await AsyncStorage.getItem(key);
-    return val ? JSON.parse(val) : fallback;
-  } catch { return fallback; }
+  try { const v = await AsyncStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch { return fallback; }
 }
-
 async function saveData(key: string, data: any) {
   try { await AsyncStorage.setItem(key, JSON.stringify(data)); } catch {}
 }
 
-// ===== HESAPLAYICI =====
 function safe(n: number) {
   if (!isFinite(n) || isNaN(n)) return 0;
   return Math.round(n * 100) / 100;
@@ -53,7 +44,6 @@ function hesapla(g: any) {
   const comm = Math.min(99, Math.max(0, +g.comm || 0));
   const extra = Math.max(0, +g.extra || 0);
   const vatR = g.vat ? Math.min(50, Math.max(0, +g.vatR || 20)) : 0;
-
   const filament = safe((fw / 1000) * cpk);
   const elektrik = safe((watts / 1000) * hrs * ekwh);
   const iscilik = safe(hrs * labor);
@@ -66,34 +56,32 @@ function hesapla(g: any) {
   const satis = safe(fiyat + komisyon + kdv);
   const kar = safe(satis - maliyet - komisyon - kdv);
   const margin = satis > 0 ? safe((kar / satis) * 100) : 0;
-
   return { filament, elektrik, iscilik, fire, maliyet, kdv, satis, kar, margin };
 }
 
-// ===== ONBOARDING =====
 function OnboardingScreen({ onDone }: any) {
   const [step, setStep] = useState(0);
   const slides = [
-    { icon: '🖨️', title: 'PrintPilot'a Hoş Geldin!', text: '3D baskı işletmeni için tüm yönetim tek ekranda. Maliyet hesapla, sipariş takip et, müşteri yönet.' },
-    { icon: '💰', title: 'Doğru Fiyat, Daha Fazla Kâr', text: 'Filament, elektrik, işçilik, fire ve KDV dahil gerçek maliyet hesabı. Artık zarar etme!' },
-    { icon: '📋', title: 'Siparişleri Takip Et', text: 'Her siparişi kaydet, PDF teklif oluştur, WhatsApp ile müşteriye gönder.' },
-    { icon: '📦', title: 'Stok Kontrolü', text: 'Filament stoğunu takip et, kritik seviyede uyarı al. Asla malzeme bitmeden sürprizle karşılaşma.' },
+    { icon: '🖨️', title: 'PrintPilot Hoş Geldin!', desc: '3D baskı işletmeni için tüm yönetim tek ekranda. Maliyet hesapla, sipariş takip et, müşteri yönet.' },
+    { icon: '💰', title: 'Doğru Fiyat, Daha Fazla Kar', desc: 'Filament, elektrik, işçilik, fire ve KDV dahil gerçek maliyet hesabı. Artık zarar etme!' },
+    { icon: '📋', title: 'Siparişleri Takip Et', desc: 'Her siparişi kaydet, WhatsApp ile müşteriye gönder, durumunu takip et.' },
+    { icon: '📦', title: 'Stok Kontrolü', desc: 'Filament stoğunu takip et, kritik seviyede uyarı al. Asla malzeme bitmeden sürprizle karşılaşma.' },
   ];
-
+  const s = slides[step];
   return (
     <View style={{ flex: 1, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
       <StatusBar barStyle="light-content" backgroundColor={C.bg} />
-      <Text style={{ fontSize: 80, marginBottom: 24 }}>{slides[step].icon}</Text>
-      <Text style={{ color: C.text, fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 }}>{slides[step].title}</Text>
-      <Text style={{ color: C.sub, fontSize: 16, textAlign: 'center', lineHeight: 24, marginBottom: 40 }}>{slides[step].text}</Text>
+      <Text style={{ fontSize: 80, marginBottom: 24 }}>{s.icon}</Text>
+      <Text style={{ color: C.text, fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 }}>{s.title}</Text>
+      <Text style={{ color: C.sub, fontSize: 16, textAlign: 'center', lineHeight: 24, marginBottom: 40 }}>{s.desc}</Text>
       <View style={{ flexDirection: 'row', gap: 8, marginBottom: 40 }}>
         {slides.map((_, i) => (
           <View key={i} style={{ width: i === step ? 24 : 8, height: 8, borderRadius: 4, backgroundColor: i === step ? C.primary : C.border }} />
         ))}
       </View>
-      <TouchableOpacity style={[{ backgroundColor: C.primary, borderRadius: 14, paddingHorizontal: 40, paddingVertical: 16, width: '100%', alignItems: 'center' }]}
+      <TouchableOpacity style={{ backgroundColor: C.primary, borderRadius: 14, paddingHorizontal: 40, paddingVertical: 16, width: '100%', alignItems: 'center' }}
         onPress={() => step < slides.length - 1 ? setStep(step + 1) : onDone()}>
-        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 17 }}>{step < slides.length - 1 ? 'Devam →' : '🚀 Başla'}</Text>
+        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 17 }}>{step < slides.length - 1 ? 'Devam →' : 'Basla!'}</Text>
       </TouchableOpacity>
       {step > 0 && (
         <TouchableOpacity style={{ marginTop: 16 }} onPress={onDone}>
@@ -104,26 +92,22 @@ function OnboardingScreen({ onDone }: any) {
   );
 }
 
-// ===== HESAPLAYICI EKRANI =====
 function HesapScreen({ onSave, isPremium, gunlukCalc, setGunlukCalc }: any) {
   const [form, setForm] = useState({
-    fw: '50', cpk: '500', hrs: '3', ekwh: '2.5',
-    watts: '200', fail: '10', labor: '50', profit: '30',
-    comm: '0', extra: '0', vat: false, vatR: '20',
-    musteri: '', aciklama: ''
+    fw: '50', cpk: '500', hrs: '3', ekwh: '2.5', watts: '200',
+    fail: '10', labor: '50', profit: '30', comm: '0', extra: '0',
+    vat: false, vatR: '20', musteri: '', aciklama: ''
   });
   const [result, setResult] = useState<any>(null);
   const [saved, setSaved] = useState(false);
   const [sharing, setSharing] = useState(false);
-
-  const upd = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
   const LIMIT = 5;
   const gunKalan = Math.max(0, LIMIT - gunlukCalc);
+  const upd = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
 
   const calc = () => {
     if (!isPremium && gunlukCalc >= LIMIT) {
-      Alert.alert('⭐ Premium Gerekli', 'Günlük ücretsiz hesaplama limitine ulaştınız (5/5).\n\nStandard plan ile sınırsız hesaplayın!',
-        [{ text: 'Tamam', style: 'cancel' }]);
+      Alert.alert('Limit Doldu', 'Gunluk 5 hesaplama hakkini kullandiniz. Premium ile sinırsız hesaplayin!');
       return;
     }
     setResult(hesapla(form));
@@ -137,52 +121,50 @@ function HesapScreen({ onSave, isPremium, gunlukCalc, setGunlukCalc }: any) {
 
   const kaydet = () => {
     if (!result) return;
-    const siparis = {
-      id: Date.now(), musteri: form.musteri || 'Genel',
-      aciklama: form.aciklama, filamentGr: +form.fw, sure: +form.hrs,
-      maliyet: result.maliyet, satis: result.satis, kar: result.kar,
-      tarih: new Date().toLocaleDateString('tr-TR'),
-      durum: 'Bekliyor', detay: form
-    };
-    onSave(siparis);
+    onSave({
+      id: Date.now(), musteri: form.musteri || 'Genel', aciklama: form.aciklama,
+      filamentGr: +form.fw, sure: +form.hrs, maliyet: result.maliyet,
+      satis: result.satis, kar: result.kar,
+      tarih: new Date().toLocaleDateString('tr-TR'), durum: 'Bekliyor', detay: form
+    });
     setSaved(true);
-    Alert.alert('✅ Kaydedildi!', 'Sipariş geçmişine eklendi.');
+    Alert.alert('Kaydedildi!', 'Siparis gecmisine eklendi.');
   };
 
-  const whatsappPaylas = async () => {
+  const whatsapp = async () => {
     if (!result) return;
     setSharing(true);
-    const mesaj = `🖨️ *PrintPilot - Fiyat Teklifi*
+    const msg = 'PrintPilot - Fiyat Teklifi' +
+      '
+Musteri: ' + (form.musteri || 'Genel') +
+      '
+Aciklama: ' + (form.aciklama || '-') +
+      '
+Filament: ' + form.fw + 'g' +
+      '
+Sure: ' + form.hrs + ' saat' +
+      '
+Maliyet: ' + result.maliyet.toFixed(2) + ' TL' +
+      '
+Satis Fiyati: ' + result.satis.toFixed(2) + ' TL' +
+      '
+Kar: ' + result.kar.toFixed(2) + ' TL' +
+      '
 
-Müşteri: ${form.musteri || 'Genel'}
-Açıklama: ${form.aciklama || '-'}
-
-📊 *Hesap Detayı:*
-• Filament: ${form.fw}g
-• Baskı Süresi: ${form.hrs} saat
-• Maliyet: ₺${result.maliyet.toFixed(2)}
-${result.kdv > 0 ? '• KDV: ₺' + result.kdv.toFixed(2) : ''}
-
-💰 *Satış Fiyatı: ₺${result.satis.toFixed(2)}*
-
-_PrintPilot ile hesaplandı_`;
-
+PrintPilot ile hesaplandi';
     try {
-      const url = `whatsapp://send?text=${encodeURIComponent(mesaj)}`;
-      const canOpen = await Linking.canOpenURL(url);
-      if (canOpen) {
-        await Linking.openURL(url);
-      } else {
-        await Share.share({ message: mesaj, title: 'PrintPilot Fiyat Teklifi' });
-      }
-    } catch { Alert.alert('Hata', 'Paylaşım açılamadı'); }
+      const url = 'whatsapp://send?text=' + encodeURIComponent(msg);
+      const ok = await Linking.canOpenURL(url);
+      if (ok) await Linking.openURL(url);
+      else await Share.share({ message: msg });
+    } catch { Alert.alert('Hata', 'Paylasim acilamadi'); }
     setSharing(false);
   };
 
   const Field = ({ lbl, k, decimal = true }: any) => (
-    <View style={s.field}>
-      <Text style={s.lbl}>{lbl}</Text>
-      <TextInput style={s.inp} value={(form as any)[k]}
+    <View style={st.field}>
+      <Text style={st.lbl}>{lbl}</Text>
+      <TextInput style={st.inp} value={(form as any)[k]}
         onChangeText={v => upd(k, v)} keyboardType={decimal ? 'decimal-pad' : 'default'}
         placeholderTextColor={C.sub} />
     </View>
@@ -191,86 +173,76 @@ _PrintPilot ile hesaplandı_`;
   const Row = ({ lbl, val, bold, hi }: any) => (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
       <Text style={{ color: hi ? C.gold : bold ? C.text : C.sub, fontWeight: bold ? 'bold' : 'normal', fontSize: bold ? 15 : 13 }}>{lbl}</Text>
-      <Text style={{ color: hi ? C.gold : bold ? C.text : C.sub, fontWeight: bold ? 'bold' : 'normal', fontSize: bold ? 15 : 13 }}>₺{val?.toFixed(2)}</Text>
+      <Text style={{ color: hi ? C.gold : bold ? C.text : C.sub, fontWeight: bold ? 'bold' : 'normal', fontSize: bold ? 15 : 13 }}>
+        TL{val?.toFixed(2)}
+      </Text>
     </View>
   );
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Text style={s.title}>💰 Hesaplayıcı</Text>
+        <Text style={st.title}>Fiyat Hesaplayici</Text>
         {!isPremium && (
-          <View style={{ backgroundColor: gunKalan <= 1 ? C.error + '22' : C.primary + '22', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
-            <Text style={{ color: gunKalan <= 1 ? C.error : C.primary, fontSize: 12, fontWeight: 'bold' }}>
-              {gunKalan}/{LIMIT} hak
-            </Text>
+          <View style={{ backgroundColor: gunKalan <= 1 ? C.error + '33' : C.primary + '22', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
+            <Text style={{ color: gunKalan <= 1 ? C.error : C.primary, fontSize: 12, fontWeight: 'bold' }}>{gunKalan}/{LIMIT} hak</Text>
           </View>
         )}
       </View>
-
-      <View style={s.card}>
-        <Text style={s.secTitle}>SİPARİŞ BİLGİSİ</Text>
-        <TextInput style={[s.inp, { marginBottom: 10 }]} placeholder="Müşteri adı (opsiyonel)"
+      <View style={st.card}>
+        <Text style={st.secTit}>SIPARIS BILGISI</Text>
+        <TextInput style={[st.inp, { marginBottom: 10 }]} placeholder="Musteri adi (opsiyonel)"
           placeholderTextColor={C.sub} value={form.musteri} onChangeText={v => upd('musteri', v)} />
-        <TextInput style={s.inp} placeholder="Açıklama (opsiyonel)"
+        <TextInput style={st.inp} placeholder="Aciklama (opsiyonel)"
           placeholderTextColor={C.sub} value={form.aciklama} onChangeText={v => upd('aciklama', v)} />
       </View>
-
-      <View style={[s.card, { marginTop: 12 }]}>
-        <Text style={s.secTitle}>MALZEME & BASKI</Text>
+      <View style={[st.card, { marginTop: 12 }]}>
+        <Text style={st.secTit}>MALZEME & BASKI</Text>
         <Field lbl="Filament (gram)" k="fw" />
-        <Field lbl="Filament Fiyatı (₺/kg)" k="cpk" />
-        <Field lbl="Baskı Süresi (saat)" k="hrs" />
-        <Field lbl="Yazıcı Gücü (Watt)" k="watts" />
-        <Field lbl="Elektrik (₺/kWh)" k="ekwh" />
+        <Field lbl="Filament Fiyati (TL/kg)" k="cpk" />
+        <Field lbl="Baski Suresi (saat)" k="hrs" />
+        <Field lbl="Yazici Gucu (Watt)" k="watts" />
+        <Field lbl="Elektrik (TL/kWh)" k="ekwh" />
       </View>
-
-      <View style={[s.card, { marginTop: 12 }]}>
-        <Text style={s.secTitle}>MALİYET & KÂR</Text>
-        <Field lbl="İşçilik (₺/saat)" k="labor" />
-        <Field lbl="Fire Oranı (%)" k="fail" />
-        <Field lbl="Kâr Marjı (%)" k="profit" />
+      <View style={[st.card, { marginTop: 12 }]}>
+        <Text style={st.secTit}>MALIYET & KAR</Text>
+        <Field lbl="Iscilik (TL/saat)" k="labor" />
+        <Field lbl="Fire Orani (%)" k="fail" />
+        <Field lbl="Kar Marji (%)" k="profit" />
         <Field lbl="Komisyon (%)" k="comm" />
-        <Field lbl="Ekstra Maliyet (₺)" k="extra" />
+        <Field lbl="Ekstra Maliyet (TL)" k="extra" />
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-          <Text style={s.lbl}>KDV Dahil (%{form.vatR})</Text>
+          <Text style={st.lbl}>KDV Dahil Et</Text>
           <Switch value={form.vat} onValueChange={v => upd('vat', v)}
             trackColor={{ false: C.border, true: C.primary }} thumbColor="#fff" />
         </View>
       </View>
-
-      <TouchableOpacity style={[s.btn, { marginTop: 16 }, !isPremium && gunlukCalc >= LIMIT && { backgroundColor: C.border }]}
-        onPress={calc} disabled={!isPremium && gunlukCalc >= LIMIT}>
-        <Text style={s.btnTxt}>{!isPremium && gunlukCalc >= LIMIT ? '⭐ Premium ile Hesapla' : '🔢 Hesapla'}</Text>
+      <TouchableOpacity style={[st.btn, { marginTop: 16 }]} onPress={calc}>
+        <Text style={st.btnTxt}>{!isPremium && gunlukCalc >= LIMIT ? 'Premium ile Hesapla' : 'Hesapla'}</Text>
       </TouchableOpacity>
-
       {result && (
-        <View style={[s.card, { marginTop: 16 }]}>
-          <Text style={[s.title, { fontSize: 16, marginBottom: 14 }]}>📊 Sonuç</Text>
+        <View style={[st.card, { marginTop: 16 }]}>
+          <Text style={[st.title, { fontSize: 16, marginBottom: 14 }]}>Sonuc</Text>
           <Row lbl="Filament" val={result.filament} />
           <Row lbl="Elektrik" val={result.elektrik} />
-          <Row lbl="İşçilik" val={result.iscilik} />
-          <Row lbl="Fire (%{form.fail})" val={result.fire} />
+          <Row lbl="Iscilik" val={result.iscilik} />
+          <Row lbl="Fire" val={result.fire} />
           <View style={{ height: 1, backgroundColor: C.border, marginVertical: 10 }} />
           <Row lbl="Toplam Maliyet" val={result.maliyet} bold />
           {result.kdv > 0 && <Row lbl="KDV" val={result.kdv} />}
-          <Row lbl="💰 Satış Fiyatı" val={result.satis} bold hi />
-          <Row lbl={`Kâr (%${result.margin})`} val={result.kar} />
-
+          <Row lbl="SATIS FIYATI" val={result.satis} bold hi />
+          <Row lbl={"Kar (%" + result.margin + ")"} val={result.kar} />
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
-            <TouchableOpacity style={[s.btn, { flex: 1, backgroundColor: saved ? C.success : C.primary }]} onPress={kaydet}>
-              <Text style={s.btnTxt}>{saved ? '✅ Kaydedildi' : '💾 Kaydet'}</Text>
+            <TouchableOpacity style={[st.btn, { flex: 1, backgroundColor: saved ? C.success : C.primary }]} onPress={kaydet}>
+              <Text style={st.btnTxt}>{saved ? 'Kaydedildi!' : 'Kaydet'}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[s.btn, { flex: 1, backgroundColor: '#25D366' }]} onPress={whatsappPaylas} disabled={sharing}>
-              {sharing ? <ActivityIndicator color="#fff" /> : <Text style={s.btnTxt}>📱 WhatsApp</Text>}
+            <TouchableOpacity style={[st.btn, { flex: 1, backgroundColor: '#25D366' }]} onPress={whatsapp} disabled={sharing}>
+              {sharing ? <ActivityIndicator color="#fff" size="small" /> : <Text style={st.btnTxt}>WhatsApp</Text>}
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={[s.btn, { marginTop: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border }]}
-            onPress={() => {
-              const mesaj = `PrintPilot Fiyat Teklifi\nMaliyet: ₺${result.maliyet.toFixed(2)}\nSatış Fiyatı: ₺${result.satis.toFixed(2)}\nKâr: ₺${result.kar.toFixed(2)}`;
-              Share.share({ message: mesaj, title: 'PrintPilot Fiyat Teklifi' });
-            }}>
-            <Text style={[s.btnTxt, { color: C.text }]}>📤 Diğer Uygulama ile Paylaş</Text>
+          <TouchableOpacity style={[st.btn, { marginTop: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border }]}
+            onPress={() => Share.share({ message: 'PrintPilot\nMaliyet: TL' + result.maliyet.toFixed(2) + '\nSatis: TL' + result.satis.toFixed(2) })}>
+            <Text style={[st.btnTxt, { color: C.text }]}>Diger Uygulama ile Paylas</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -279,49 +251,39 @@ _PrintPilot ile hesaplandı_`;
   );
 }
 
-// ===== SİPARİŞLER =====
 function SiparisScreen({ siparisler, setSiparisler }: any) {
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('Tümü');
-  const durumlar = ['Tümü', 'Bekliyor', 'Üretimde', 'Tamamlandı'];
-
+  const [filter, setFilter] = useState('Tumü');
+  const durumlar = ['Tumü', 'Bekliyor', 'Üretimde', 'Tamamlandi'];
   const filtered = siparisler.filter((x: any) => {
-    const searchOk = x.musteri.toLowerCase().includes(search.toLowerCase()) ||
-      (x.aciklama || '').toLowerCase().includes(search.toLowerCase());
-    const filterOk = filter === 'Tümü' || x.durum === filter;
-    return searchOk && filterOk;
+    const sOk = x.musteri.toLowerCase().includes(search.toLowerCase());
+    const fOk = filter === 'Tumü' || x.durum === filter;
+    return sOk && fOk;
   });
+  const durumRenk: any = { 'Bekliyor': C.warning, 'Üretimde': C.primary, 'Tamamlandi': C.success };
 
   const durumDegistir = (id: number, yeniDurum: string) => {
     const yeni = siparisler.map((s: any) => s.id === id ? { ...s, durum: yeniDurum } : s);
-    setSiparisler(yeni);
-    saveData(KEYS.siparisler, yeni);
+    setSiparisler(yeni); saveData(KEYS.siparisler, yeni);
   };
 
-  const sil = (id: number) => {
-    Alert.alert('Sil', 'Bu siparişi silmek istiyor musunuz?', [
-      { text: 'İptal', style: 'cancel' },
-      { text: 'Sil', style: 'destructive', onPress: () => {
-        const yeni = siparisler.filter((s: any) => s.id !== id);
-        setSiparisler(yeni);
-        saveData(KEYS.siparisler, yeni);
-      }}
-    ]);
-  };
-
-  const durumRenk: any = { 'Bekliyor': C.warning, 'Üretimde': C.primary, 'Tamamlandı': C.success };
+  const sil = (id: number) => Alert.alert('Sil', 'Bu siparisi silmek istiyor musunuz?', [
+    { text: 'Iptal', style: 'cancel' },
+    { text: 'Sil', style: 'destructive', onPress: () => {
+      const yeni = siparisler.filter((s: any) => s.id !== id);
+      setSiparisler(yeni); saveData(KEYS.siparisler, yeni);
+    }}
+  ]);
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <View style={{ padding: 16, paddingBottom: 8 }}>
-        <TextInput style={s.inp} placeholder="Sipariş veya müşteri ara..."
-          placeholderTextColor={C.sub} value={search} onChangeText={setSearch} />
+        <TextInput style={st.inp} placeholder="Siparis ara..." placeholderTextColor={C.sub} value={search} onChangeText={setSearch} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 10 }}>
           {durumlar.map(d => (
             <TouchableOpacity key={d} onPress={() => setFilter(d)}
               style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginRight: 8,
-                backgroundColor: filter === d ? C.primary : C.card, borderWidth: 1,
-                borderColor: filter === d ? C.primary : C.border }}>
+                backgroundColor: filter === d ? C.primary : C.card, borderWidth: 1, borderColor: filter === d ? C.primary : C.border }}>
               <Text style={{ color: filter === d ? '#fff' : C.sub, fontSize: 13 }}>{d}</Text>
             </TouchableOpacity>
           ))}
@@ -332,39 +294,38 @@ function SiparisScreen({ siparisler, setSiparisler }: any) {
         ListEmptyComponent={
           <View style={{ alignItems: 'center', marginTop: 60 }}>
             <Text style={{ fontSize: 48 }}>📋</Text>
-            <Text style={{ color: C.sub, marginTop: 12, fontSize: 15 }}>Sipariş bulunamadı</Text>
-            <Text style={{ color: C.border, fontSize: 12, marginTop: 4 }}>Hesaplayıcıdan sipariş kaydedin</Text>
+            <Text style={{ color: C.sub, marginTop: 12 }}>Siparis bulunamadi</Text>
+            <Text style={{ color: C.border, fontSize: 12, marginTop: 4 }}>Hesaplayicidan siparis kaydedin</Text>
           </View>
         }
         renderItem={({ item }: any) => (
-          <View style={[s.card, { marginBottom: 12 }]}>
+          <View style={[st.card, { marginBottom: 12 }]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: C.text, fontWeight: 'bold', fontSize: 15 }}>{item.musteri}</Text>
-                {item.aciklama ? <Text style={{ color: C.sub, fontSize: 12, marginTop: 2 }}>📝 {item.aciklama}</Text> : null}
-                <Text style={{ color: C.border, fontSize: 11, marginTop: 2 }}>📅 {item.tarih} • {item.filamentGr}g • {item.sure}s</Text>
+                {item.aciklama ? <Text style={{ color: C.sub, fontSize: 12, marginTop: 2 }}>{item.aciklama}</Text> : null}
+                <Text style={{ color: C.border, fontSize: 11, marginTop: 2 }}>{item.tarih} • {item.filamentGr}g • {item.sure}s</Text>
               </View>
-              <View style={[{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-                { backgroundColor: (durumRenk[item.durum] || C.sub) + '22' }]}>
+              <View style={{ backgroundColor: (durumRenk[item.durum] || C.sub) + '22', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
                 <Text style={{ color: durumRenk[item.durum] || C.sub, fontSize: 11, fontWeight: 'bold' }}>{item.durum}</Text>
               </View>
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: C.surface, borderRadius: 10, padding: 12, marginBottom: 10 }}>
               <View style={{ alignItems: 'center' }}>
                 <Text style={{ color: C.sub, fontSize: 10 }}>Maliyet</Text>
-                <Text style={{ color: C.text, fontWeight: 'bold' }}>₺{item.maliyet?.toFixed(2)}</Text>
+                <Text style={{ color: C.text, fontWeight: 'bold' }}>TL{item.maliyet?.toFixed(2)}</Text>
               </View>
               <View style={{ alignItems: 'center' }}>
-                <Text style={{ color: C.sub, fontSize: 10 }}>Satış</Text>
-                <Text style={{ color: C.gold, fontWeight: 'bold', fontSize: 17 }}>₺{item.satis?.toFixed(2)}</Text>
+                <Text style={{ color: C.sub, fontSize: 10 }}>Satis</Text>
+                <Text style={{ color: C.gold, fontWeight: 'bold', fontSize: 17 }}>TL{item.satis?.toFixed(2)}</Text>
               </View>
               <View style={{ alignItems: 'center' }}>
-                <Text style={{ color: C.sub, fontSize: 10 }}>Kâr</Text>
-                <Text style={{ color: C.success, fontWeight: 'bold' }}>₺{item.kar?.toFixed(2)}</Text>
+                <Text style={{ color: C.sub, fontSize: 10 }}>Kar</Text>
+                <Text style={{ color: C.success, fontWeight: 'bold' }}>TL{item.kar?.toFixed(2)}</Text>
               </View>
             </View>
             <View style={{ flexDirection: 'row', gap: 6 }}>
-              {['Bekliyor', 'Üretimde', 'Tamamlandı'].map(d => (
+              {['Bekliyor', 'Üretimde', 'Tamamlandi'].map(d => (
                 <TouchableOpacity key={d} onPress={() => durumDegistir(item.id, d)}
                   style={{ flex: 1, paddingVertical: 6, borderRadius: 8, alignItems: 'center',
                     backgroundColor: item.durum === d ? (durumRenk[d] + '33') : C.surface,
@@ -374,97 +335,78 @@ function SiparisScreen({ siparisler, setSiparisler }: any) {
               ))}
               <TouchableOpacity onPress={() => sil(item.id)}
                 style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: C.error + '22', borderWidth: 1, borderColor: C.error + '55', justifyContent: 'center' }}>
-                <Text style={{ color: C.error, fontSize: 12 }}>🗑️</Text>
+                <Text style={{ color: C.error }}>Sil</Text>
               </TouchableOpacity>
             </View>
           </View>
-        )} />
+        )}
+      />
     </View>
   );
 }
 
-// ===== MÜŞTERİLER =====
 function MusteriScreen({ musteriler, setMusteriler }: any) {
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ ad: '', tel: '', mail: '', adres: '' });
+  const [form, setForm] = useState({ ad: '', tel: '', mail: '' });
   const [search, setSearch] = useState('');
-
-  const filtered = musteriler.filter((x: any) =>
-    x.ad.toLowerCase().includes(search.toLowerCase()) ||
-    (x.tel || '').includes(search)
-  );
+  const filtered = musteriler.filter((x: any) => x.ad.toLowerCase().includes(search.toLowerCase()));
 
   const ekle = () => {
-    if (!form.ad.trim()) { Alert.alert('Hata', 'İsim gerekli'); return; }
-    const yeni = [...musteriler, { id: Date.now(), ...form, siparisSayisi: 0, kayitTarihi: new Date().toLocaleDateString('tr-TR') }];
+    if (!form.ad.trim()) { Alert.alert('Hata', 'Isim gerekli'); return; }
+    const yeni = [...musteriler, { id: Date.now(), ...form, tarih: new Date().toLocaleDateString('tr-TR') }];
     setMusteriler(yeni); saveData(KEYS.musteriler, yeni);
-    setForm({ ad: '', tel: '', mail: '', adres: '' }); setModal(false);
+    setForm({ ad: '', tel: '', mail: '' }); setModal(false);
   };
 
-  const sil = (id: number) => {
-    Alert.alert('Sil', 'Bu müşteriyi silmek istiyor musunuz?', [
-      { text: 'İptal', style: 'cancel' },
-      { text: 'Sil', style: 'destructive', onPress: () => {
-        const yeni = musteriler.filter((m: any) => m.id !== id);
-        setMusteriler(yeni); saveData(KEYS.musteriler, yeni);
-      }}
-    ]);
-  };
+  const sil = (id: number) => Alert.alert('Sil', 'Bu musteri silinsin mi?', [
+    { text: 'Iptal', style: 'cancel' },
+    { text: 'Sil', style: 'destructive', onPress: () => {
+      const yeni = musteriler.filter((m: any) => m.id !== id);
+      setMusteriler(yeni); saveData(KEYS.musteriler, yeni);
+    }}
+  ]);
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <View style={{ padding: 16, flexDirection: 'row', gap: 10 }}>
-        <TextInput style={[s.inp, { flex: 1 }]} placeholder="Müşteri ara..."
+        <TextInput style={[st.inp, { flex: 1 }]} placeholder="Musteri ara..."
           placeholderTextColor={C.sub} value={search} onChangeText={setSearch} />
-        <TouchableOpacity style={[s.btn, { paddingHorizontal: 20 }]} onPress={() => setModal(true)}>
-          <Text style={s.btnTxt}>+ Ekle</Text>
+        <TouchableOpacity style={[st.btn, { paddingHorizontal: 20 }]} onPress={() => setModal(true)}>
+          <Text style={st.btnTxt}>+ Ekle</Text>
         </TouchableOpacity>
       </View>
       <FlatList data={filtered} keyExtractor={i => String(i.id)} contentContainerStyle={{ paddingHorizontal: 16 }}
-        ListEmptyComponent={
-          <View style={{ alignItems: 'center', marginTop: 60 }}>
-            <Text style={{ fontSize: 48 }}>👥</Text>
-            <Text style={{ color: C.sub, marginTop: 12 }}>Henüz müşteri yok</Text>
-            <Text style={{ color: C.border, fontSize: 12, marginTop: 4 }}>Yukarıdan ekleyin</Text>
-          </View>
-        }
+        ListEmptyComponent={<View style={{ alignItems: 'center', marginTop: 60 }}><Text style={{ fontSize: 48 }}>👥</Text><Text style={{ color: C.sub, marginTop: 12 }}>Musteri yok</Text></View>}
         renderItem={({ item }) => (
-          <View style={[s.card, { flexDirection: 'row', alignItems: 'center', marginBottom: 10 }]}>
+          <View style={[st.card, { flexDirection: 'row', alignItems: 'center', marginBottom: 10 }]}>
             <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: C.primary, justifyContent: 'center', alignItems: 'center', marginRight: 14 }}>
               <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18 }}>{item.ad[0].toUpperCase()}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: C.text, fontWeight: 'bold', fontSize: 15 }}>{item.ad}</Text>
-              {item.tel ? <Text style={{ color: C.sub, fontSize: 12, marginTop: 2 }}>📞 {item.tel}</Text> : null}
-              {item.mail ? <Text style={{ color: C.sub, fontSize: 12 }}>✉️ {item.mail}</Text> : null}
-              <Text style={{ color: C.border, fontSize: 11, marginTop: 2 }}>Kayıt: {item.kayitTarihi}</Text>
+              <Text style={{ color: C.text, fontWeight: 'bold' }}>{item.ad}</Text>
+              {item.tel ? <Text style={{ color: C.sub, fontSize: 12 }}>{item.tel}</Text> : null}
+              {item.mail ? <Text style={{ color: C.sub, fontSize: 12 }}>{item.mail}</Text> : null}
             </View>
-            <TouchableOpacity onPress={() => sil(item.id)} style={{ padding: 8 }}>
-              <Text style={{ color: C.error }}>🗑️</Text>
+            <TouchableOpacity onPress={() => sil(item.id)}>
+              <Text style={{ color: C.error, fontSize: 18 }}>×</Text>
             </TouchableOpacity>
           </View>
-        )} />
+        )}
+      />
       <Modal visible={modal} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: C.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 }}>
-            <Text style={[s.title, { marginBottom: 16 }]}>👤 Yeni Müşteri</Text>
-            {[
-              { k: 'ad', ph: 'İsim Soyisim *' },
-              { k: 'tel', ph: 'Telefon', kb: 'phone-pad' },
-              { k: 'mail', ph: 'E-posta', kb: 'email-address' },
-              { k: 'adres', ph: 'Adres (opsiyonel)' },
-            ].map(f => (
-              <TextInput key={f.k} style={[s.inp, { marginBottom: 10 }]} placeholder={f.ph}
-                placeholderTextColor={C.sub} value={(form as any)[f.k]}
-                onChangeText={v => setForm((p: any) => ({ ...p, [f.k]: v }))}
-                keyboardType={(f.kb as any) || 'default'} />
+            <Text style={[st.title, { marginBottom: 16 }]}>Yeni Musteri</Text>
+            {[['ad','Isim *'],['tel','Telefon'],['mail','E-posta']].map(([k,ph]) => (
+              <TextInput key={k} style={[st.inp, { marginBottom: 10 }]} placeholder={ph} placeholderTextColor={C.sub}
+                value={(form as any)[k]} onChangeText={v => setForm((p: any) => ({ ...p, [k]: v }))} />
             ))}
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
-              <TouchableOpacity style={[s.btn, { flex: 1, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }]} onPress={() => setModal(false)}>
-                <Text style={[s.btnTxt, { color: C.text }]}>İptal</Text>
+              <TouchableOpacity style={[st.btn, { flex: 1, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }]} onPress={() => setModal(false)}>
+                <Text style={[st.btnTxt, { color: C.text }]}>Iptal</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[s.btn, { flex: 1 }]} onPress={ekle}>
-                <Text style={s.btnTxt}>Kaydet</Text>
+              <TouchableOpacity style={[st.btn, { flex: 1 }]} onPress={ekle}>
+                <Text style={st.btnTxt}>Kaydet</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -474,81 +416,73 @@ function MusteriScreen({ musteriler, setMusteriler }: any) {
   );
 }
 
-// ===== STOK =====
 function StokScreen({ stok, setStok }: any) {
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ ad: '', malzeme: 'PLA', renk: 'Siyah', toplam: '1000', fiyat: '500' });
+  const [form, setForm] = useState({ ad: '', malzeme: 'PLA', toplam: '1000', fiyat: '500' });
   const malzemeler = ['PLA', 'PETG', 'ABS', 'TPU', 'ASA', 'Resin'];
 
   const ekle = () => {
-    if (!form.ad.trim()) { Alert.alert('Hata', 'Stok adı gerekli'); return; }
+    if (!form.ad.trim()) { Alert.alert('Hata', 'Ad gerekli'); return; }
     const yeni = [...stok, { id: Date.now(), ...form, toplam: +form.toplam, fiyat: +form.fiyat, kullanilan: 0 }];
-    setStok(yeni); saveData(KEYS.stok, yeni); setModal(false);
-    setForm({ ad: '', malzeme: 'PLA', renk: 'Siyah', toplam: '1000', fiyat: '500' });
+    setStok(yeni); saveData(KEYS.stok, yeni);
+    setForm({ ad: '', malzeme: 'PLA', toplam: '1000', fiyat: '500' }); setModal(false);
   };
 
-  const sil = (id: number) => {
-    Alert.alert('Sil', 'Bu stoku silmek istiyor musunuz?', [
-      { text: 'İptal', style: 'cancel' },
-      { text: 'Sil', style: 'destructive', onPress: () => {
-        const yeni = stok.filter((s: any) => s.id !== id);
-        setStok(yeni); saveData(KEYS.stok, yeni);
-      }}
-    ]);
-  };
+  const sil = (id: number) => Alert.alert('Sil', 'Bu stok silinsin mi?', [
+    { text: 'Iptal', style: 'cancel' },
+    { text: 'Sil', style: 'destructive', onPress: () => {
+      const yeni = stok.filter((s: any) => s.id !== id);
+      setStok(yeni); saveData(KEYS.stok, yeni);
+    }}
+  ]);
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <TouchableOpacity style={[s.btn, { margin: 16 }]} onPress={() => setModal(true)}>
-        <Text style={s.btnTxt}>+ Stok Ekle</Text>
+      <TouchableOpacity style={[st.btn, { margin: 16 }]} onPress={() => setModal(true)}>
+        <Text style={st.btnTxt}>+ Stok Ekle</Text>
       </TouchableOpacity>
       <FlatList data={stok} keyExtractor={i => String(i.id)} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
-        ListEmptyComponent={
-          <View style={{ alignItems: 'center', marginTop: 60 }}>
-            <Text style={{ fontSize: 48 }}>🧵</Text>
-            <Text style={{ color: C.sub, marginTop: 12 }}>Stok bulunamadı</Text>
-            <Text style={{ color: C.border, fontSize: 12, marginTop: 4 }}>Yukarıdan stok ekleyin</Text>
-          </View>
-        }
+        ListEmptyComponent={<View style={{ alignItems: 'center', marginTop: 60 }}><Text style={{ fontSize: 48 }}>🧵</Text><Text style={{ color: C.sub, marginTop: 12 }}>Stok yok</Text></View>}
         renderItem={({ item }) => {
           const pct = Math.min(100, (item.kullanilan / item.toplam) * 100);
           const kalan = item.toplam - item.kullanilan;
           const renk = pct > 80 ? C.error : pct > 50 ? C.warning : C.success;
           return (
-            <View style={[s.card, { marginBottom: 12 }]}>
+            <View style={[st.card, { marginBottom: 12 }]}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: C.text, fontWeight: 'bold' }}>{item.ad}</Text>
-                  <Text style={{ color: C.sub, fontSize: 12 }}>{item.malzeme} • {item.renk} • ₺{item.fiyat}/kg</Text>
+                  <Text style={{ color: C.sub, fontSize: 12 }}>{item.malzeme} • TL{item.fiyat}/kg</Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <Text style={{ color: renk, fontWeight: 'bold' }}>{kalan}g</Text>
-                  <TouchableOpacity onPress={() => sil(item.id)}><Text style={{ color: C.error }}>🗑️</Text></TouchableOpacity>
+                  <TouchableOpacity onPress={() => sil(item.id)}><Text style={{ color: C.error }}>×</Text></TouchableOpacity>
                 </View>
               </View>
               <View style={{ height: 10, backgroundColor: C.border, borderRadius: 5, overflow: 'hidden', marginBottom: 6 }}>
                 <View style={{ width: pct + '%' as any, height: 10, backgroundColor: renk, borderRadius: 5 }} />
               </View>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text style={{ color: C.sub, fontSize: 11 }}>Kullanılan: {item.kullanilan}g</Text>
+                <Text style={{ color: C.sub, fontSize: 11 }}>Kullanilan: {item.kullanilan}g</Text>
                 <Text style={{ color: C.sub, fontSize: 11 }}>Toplam: {item.toplam}g</Text>
-                <Text style={{ color: pct > 80 ? C.error : C.sub, fontSize: 11, fontWeight: pct > 80 ? 'bold' : 'normal' }}>{pct.toFixed(0)}%</Text>
+                <Text style={{ color: renk, fontSize: 11, fontWeight: pct > 80 ? 'bold' : 'normal' }}>{pct.toFixed(0)}%</Text>
               </View>
               {pct > 80 && (
                 <View style={{ marginTop: 8, backgroundColor: C.error + '22', borderRadius: 8, padding: 8 }}>
-                  <Text style={{ color: C.error, fontSize: 12 }}>⚠️ Stok kritik seviyede! Yenileme zamanı.</Text>
+                  <Text style={{ color: C.error, fontSize: 12 }}>Stok kritik! Yenileme zamani.</Text>
                 </View>
               )}
             </View>
           );
-        }} />
+        }}
+      />
       <Modal visible={modal} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: C.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 }}>
-            <Text style={[s.title, { marginBottom: 16 }]}>🧵 Yeni Stok</Text>
-            <TextInput style={[s.inp, { marginBottom: 10 }]} placeholder="Filament Adı *"
+            <Text style={[st.title, { marginBottom: 16 }]}>Yeni Stok</Text>
+            <TextInput style={[st.inp, { marginBottom: 10 }]} placeholder="Filament Adi *"
               placeholderTextColor={C.sub} value={form.ad} onChangeText={v => setForm(p => ({ ...p, ad: v }))} />
-            <Text style={[s.lbl, { marginBottom: 8 }]}>Malzeme</Text>
+            <Text style={[st.lbl, { marginBottom: 8 }]}>Malzeme</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
               {malzemeler.map(m => (
                 <TouchableOpacity key={m} onPress={() => setForm(p => ({ ...p, malzeme: m }))}
@@ -559,16 +493,16 @@ function StokScreen({ stok, setStok }: any) {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <TextInput style={[s.inp, { marginBottom: 10 }]} placeholder="Toplam (gram)"
+            <TextInput style={[st.inp, { marginBottom: 10 }]} placeholder="Toplam (gram)"
               placeholderTextColor={C.sub} value={form.toplam} onChangeText={v => setForm(p => ({ ...p, toplam: v }))} keyboardType="decimal-pad" />
-            <TextInput style={[s.inp, { marginBottom: 16 }]} placeholder="Fiyat (₺/kg)"
+            <TextInput style={[st.inp, { marginBottom: 16 }]} placeholder="Fiyat (TL/kg)"
               placeholderTextColor={C.sub} value={form.fiyat} onChangeText={v => setForm(p => ({ ...p, fiyat: v }))} keyboardType="decimal-pad" />
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <TouchableOpacity style={[s.btn, { flex: 1, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }]} onPress={() => setModal(false)}>
-                <Text style={[s.btnTxt, { color: C.text }]}>İptal</Text>
+              <TouchableOpacity style={[st.btn, { flex: 1, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }]} onPress={() => setModal(false)}>
+                <Text style={[st.btnTxt, { color: C.text }]}>Iptal</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[s.btn, { flex: 1 }]} onPress={ekle}>
-                <Text style={s.btnTxt}>Kaydet</Text>
+              <TouchableOpacity style={[st.btn, { flex: 1 }]} onPress={ekle}>
+                <Text style={st.btnTxt}>Kaydet</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -578,42 +512,37 @@ function StokScreen({ stok, setStok }: any) {
   );
 }
 
-// ===== İSTATİSTİK =====
 function IstatScreen({ siparisler }: any) {
   const buAy = new Date().getMonth();
   const buYil = new Date().getFullYear();
-
   const aylik = siparisler.filter((s: any) => {
     try {
-      const parcalar = s.tarih.split('.');
-      const d = new Date(+parcalar[2], +parcalar[1] - 1, +parcalar[0]);
+      const p = s.tarih.split('.'); const d = new Date(+p[2], +p[1]-1, +p[0]);
       return d.getMonth() === buAy && d.getFullYear() === buYil;
     } catch { return false; }
   });
-
-  const toplamGelir = siparisler.reduce((t: number, s: any) => t + (s.satis || 0), 0);
-  const toplamKar = siparisler.reduce((t: number, s: any) => t + (s.kar || 0), 0);
+  const topGelir = siparisler.reduce((t: number, s: any) => t + (s.satis || 0), 0);
+  const topKar = siparisler.reduce((t: number, s: any) => t + (s.kar || 0), 0);
   const ayGelir = aylik.reduce((t: number, s: any) => t + (s.satis || 0), 0);
-  const ayKar = aylik.reduce((t: number, s: any) => t + (s.kar || 0), 0);
+  const ort = siparisler.length > 0 ? topGelir / siparisler.length : 0;
   const bekleyen = siparisler.filter((s: any) => s.durum === 'Bekliyor').length;
   const uretimde = siparisler.filter((s: any) => s.durum === 'Üretimde').length;
-  const tamamlanan = siparisler.filter((s: any) => s.durum === 'Tamamlandı').length;
-  const ort = siparisler.length > 0 ? toplamGelir / siparisler.length : 0;
+  const tamamlandi = siparisler.filter((s: any) => s.durum === 'Tamamlandi').length;
 
   const kartlar = [
-    { icon: '📦', lbl: 'Toplam Sipariş', val: String(siparisler.length), color: C.primary },
+    { icon: '📦', lbl: 'Toplam Siparis', val: String(siparisler.length), color: C.primary },
     { icon: '📅', lbl: 'Bu Ay', val: String(aylik.length), color: C.secondary },
-    { icon: '💰', lbl: 'Toplam Gelir', val: '₺' + toplamGelir.toFixed(0), color: C.success },
-    { icon: '📈', lbl: 'Bu Ay Gelir', val: '₺' + ayGelir.toFixed(0), color: C.gold },
-    { icon: '🏆', lbl: 'Toplam Kâr', val: '₺' + toplamKar.toFixed(0), color: C.warning },
-    { icon: '📊', lbl: 'Ortalama', val: '₺' + ort.toFixed(0), color: C.error },
+    { icon: '💰', lbl: 'Toplam Gelir', val: 'TL' + topGelir.toFixed(0), color: C.success },
+    { icon: '📈', lbl: 'Bu Ay Gelir', val: 'TL' + ayGelir.toFixed(0), color: C.gold },
+    { icon: '🏆', lbl: 'Toplam Kar', val: 'TL' + topKar.toFixed(0), color: C.warning },
+    { icon: '📊', lbl: 'Ortalama', val: 'TL' + ort.toFixed(0), color: C.error },
   ];
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-      <Text style={s.title}>📊 İstatistikler</Text>
+      <Text style={st.title}>Istatistikler</Text>
       {kartlar.map((k, i) => (
-        <View key={i} style={[s.card, { flexDirection: 'row', alignItems: 'center', marginBottom: 10, borderLeftWidth: 4, borderLeftColor: k.color }]}>
+        <View key={i} style={[st.card, { flexDirection: 'row', alignItems: 'center', marginBottom: 10, borderLeftWidth: 4, borderLeftColor: k.color }]}>
           <Text style={{ fontSize: 26, marginRight: 14 }}>{k.icon}</Text>
           <View style={{ flex: 1 }}>
             <Text style={{ color: C.sub, fontSize: 12 }}>{k.lbl}</Text>
@@ -621,15 +550,14 @@ function IstatScreen({ siparisler }: any) {
           </View>
         </View>
       ))}
-
       {siparisler.length > 0 && (
         <>
-          <View style={[s.card, { marginTop: 8 }]}>
-            <Text style={[s.secTitle, { marginBottom: 14 }]}>SİPARİŞ DURUMLARI</Text>
+          <View style={[st.card, { marginTop: 8 }]}>
+            <Text style={[st.secTit, { marginBottom: 14 }]}>SIPARIS DURUMLARI</Text>
             {[
-              { lbl: '⏳ Bekliyor', val: bekleyen, color: C.warning },
-              { lbl: '⚙️ Üretimde', val: uretimde, color: C.primary },
-              { lbl: '✅ Tamamlandı', val: tamamlanan, color: C.success },
+              { lbl: 'Bekliyor', val: bekleyen, color: C.warning },
+              { lbl: 'Üretimde', val: uretimde, color: C.primary },
+              { lbl: 'Tamamlandi', val: tamamlandi, color: C.success },
             ].map(d => (
               <View key={d.lbl} style={{ marginBottom: 12 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -637,40 +565,36 @@ function IstatScreen({ siparisler }: any) {
                   <Text style={{ color: d.color, fontWeight: 'bold' }}>{d.val}</Text>
                 </View>
                 <View style={{ height: 6, backgroundColor: C.border, borderRadius: 3, overflow: 'hidden' }}>
-                  <View style={{ width: siparisler.length > 0 ? ((d.val / siparisler.length) * 100) + '%' as any : '0%',
-                    height: 6, backgroundColor: d.color, borderRadius: 3 }} />
+                  <View style={{ width: siparisler.length > 0 ? ((d.val / siparisler.length) * 100) + '%' as any : '0%', height: 6, backgroundColor: d.color, borderRadius: 3 }} />
                 </View>
               </View>
             ))}
           </View>
-
-          <View style={[s.card, { marginTop: 12 }]}>
-            <Text style={[s.secTitle, { marginBottom: 12 }]}>SON SİPARİŞLER</Text>
+          <View style={[st.card, { marginTop: 12 }]}>
+            <Text style={[st.secTit, { marginBottom: 12 }]}>SON SIPARISLER</Text>
             {siparisler.slice(-5).reverse().map((sp: any) => (
               <View key={sp.id} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border }}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: C.text, fontSize: 13, fontWeight: '600' }}>{sp.musteri}</Text>
-                  <Text style={{ color: C.sub, fontSize: 11, marginTop: 2 }}>{sp.tarih}</Text>
+                  <Text style={{ color: C.sub, fontSize: 11 }}>{sp.tarih}</Text>
                 </View>
-                <Text style={{ color: C.gold, fontWeight: 'bold', fontSize: 15 }}>₺{sp.satis?.toFixed(2)}</Text>
+                <Text style={{ color: C.gold, fontWeight: 'bold', fontSize: 15 }}>TL{sp.satis?.toFixed(2)}</Text>
               </View>
             ))}
           </View>
         </>
       )}
-
       {siparisler.length === 0 && (
         <View style={{ alignItems: 'center', marginTop: 30 }}>
           <Text style={{ fontSize: 60 }}>📊</Text>
-          <Text style={{ color: C.sub, marginTop: 12, fontSize: 15 }}>Henüz veri yok</Text>
-          <Text style={{ color: C.border, fontSize: 12, marginTop: 4 }}>Hesaplayıcıdan sipariş kaydedin</Text>
+          <Text style={{ color: C.sub, marginTop: 12 }}>Henüz veri yok</Text>
+          <Text style={{ color: C.border, fontSize: 12, marginTop: 4 }}>Hesaplayicidan siparis kaydedin</Text>
         </View>
       )}
     </ScrollView>
   );
 }
 
-// ===== ADMIN =====
 function AdminScreen({ isPremium, setIsPremium }: any) {
   const [firma, setFirma] = useState('');
   const [bildirim, setBildirim] = useState(true);
@@ -686,61 +610,58 @@ function AdminScreen({ isPremium, setIsPremium }: any) {
   const kaydet = async () => {
     await saveData(KEYS.ayarlar, { firma, bildirim });
     setSaved(true);
-    Alert.alert('✅', 'Ayarlar kaydedildi!');
+    Alert.alert('Kaydedildi!', 'Ayarlar kaydedildi.');
     setTimeout(() => setSaved(false), 2000);
   };
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
-      <Text style={s.title}>⚙️ Admin Paneli</Text>
-
-      <View style={[s.card, { marginBottom: 12 }]}>
-        <Text style={s.secTitle}>ABONELİK</Text>
+      <Text style={st.title}>Admin Paneli</Text>
+      <View style={[st.card, { marginBottom: 12 }]}>
+        <Text style={st.secTit}>ABONELIK</Text>
         <View style={{ alignItems: 'center', paddingVertical: 16 }}>
           {isPremium ? (
             <>
               <Text style={{ fontSize: 40 }}>⭐</Text>
               <Text style={{ color: C.gold, fontWeight: 'bold', fontSize: 20, marginTop: 8 }}>Premium Aktif</Text>
-              <Text style={{ color: C.sub, fontSize: 13, marginTop: 4 }}>Tüm özellikler açık</Text>
             </>
           ) : (
             <>
-              <Text style={{ color: C.sub, fontSize: 14, marginBottom: 12 }}>🆓 Ücretsiz Plan • 5 hesap/gün</Text>
-              <TouchableOpacity style={[s.btn, { paddingHorizontal: 32 }]}
-                onPress={() => Alert.alert('💎 Premium', 'Standard Plan: ₺99/ay\n✅ Sınırsız hesaplama\n✅ WhatsApp paylaşım\n✅ Reklamsız\n\nDealer Plan: ₺199/ay\n✅ Tüm özellikler\n✅ Öncelikli destek\n\nRevenueCat entegrasyonu tamamlanınca aktif olacak.')}>
-                <Text style={s.btnTxt}>⭐ Premium'a Geç</Text>
+              <Text style={{ color: C.sub, fontSize: 14, marginBottom: 12 }}>Ucretsiz Plan - 5 hesap/gun</Text>
+              <TouchableOpacity style={[st.btn, { paddingHorizontal: 32 }]}
+                onPress={() => Alert.alert('Premium', 'Standard: TL99/ay - Sinırsız hesaplama, WhatsApp paylasim
+
+Dealer: TL199/ay - Tum ozellikler
+
+Yakinda aktif!')}>
+                <Text style={st.btnTxt}>Premium Ol</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={{ marginTop: 12 }}
-                onPress={() => { setIsPremium(true); Alert.alert('✅', 'Test modu: Premium aktif edildi!'); }}>
-                <Text style={{ color: C.sub, fontSize: 12, textDecorationLine: 'underline' }}>Test: Premium'u aç</Text>
+              <TouchableOpacity style={{ marginTop: 12 }} onPress={() => { setIsPremium(true); Alert.alert('Test', 'Premium test modu acildi!'); }}>
+                <Text style={{ color: C.sub, fontSize: 12, textDecorationLine: 'underline' }}>Test: Premium ac</Text>
               </TouchableOpacity>
             </>
           )}
         </View>
       </View>
-
-      <View style={[s.card, { marginBottom: 12 }]}>
-        <Text style={s.secTitle}>GENEL AYARLAR</Text>
-        <Text style={s.lbl}>Firma Adı</Text>
-        <TextInput style={[s.inp, { marginBottom: 16 }]} value={firma} onChangeText={setFirma}
-          placeholder="Firma adınız" placeholderTextColor={C.sub} />
+      <View style={[st.card, { marginBottom: 12 }]}>
+        <Text style={st.secTit}>AYARLAR</Text>
+        <Text style={st.lbl}>Firma Adi</Text>
+        <TextInput style={[st.inp, { marginBottom: 16 }]} value={firma} onChangeText={setFirma}
+          placeholder="Firma adiniz" placeholderTextColor={C.sub} />
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10 }}>
-          <Text style={{ color: C.text }}>🔔 Bildirimler</Text>
-          <Switch value={bildirim} onValueChange={setBildirim}
-            trackColor={{ false: C.border, true: C.primary }} thumbColor="#fff" />
+          <Text style={{ color: C.text }}>Bildirimler</Text>
+          <Switch value={bildirim} onValueChange={setBildirim} trackColor={{ false: C.border, true: C.primary }} thumbColor="#fff" />
         </View>
       </View>
-
-      <TouchableOpacity style={[s.btn, saved && { backgroundColor: C.success }]} onPress={kaydet}>
-        <Text style={s.btnTxt}>{saved ? '✅ Kaydedildi!' : '💾 Ayarları Kaydet'}</Text>
+      <TouchableOpacity style={[st.btn, saved && { backgroundColor: C.success }]} onPress={kaydet}>
+        <Text style={st.btnTxt}>{saved ? 'Kaydedildi!' : 'Kaydet'}</Text>
       </TouchableOpacity>
-
-      <View style={[s.card, { marginTop: 12 }]}>
-        <Text style={s.secTitle}>YASAL</Text>
+      <View style={[st.card, { marginTop: 12 }]}>
+        <Text style={st.secTit}>YASAL</Text>
         {[
-          ['📜 Gizlilik Politikası', 'PrintPilot uygulaması kişisel verilerinizi cihazınızda güvenli şekilde saklar. Verileriniz üçüncü taraflarla paylaşılmaz. İletişim: dorlion.ai26@gmail.com'],
-          ['📋 Kullanım Şartları', 'PrintPilot uygulamasını kullanarak bu şartları kabul etmiş sayılırsınız. Abonelikler otomatik yenilenir. İptal için App Store/Play Store'u kullanın.'],
-          ['✉️ Destek', 'Yardım için: dorlion.ai26@gmail.com\n\nWhatsApp veya e-posta ile ulaşabilirsiniz.'],
+          ['Gizlilik Politikasi', 'PrintPilot uygulamasi verilerinizi cihazinizda saklar. Ucuncu taraflarla paylasilmaz. İletisim: dorlion.ai26@gmail.com'],
+          ['Kullanim Sartlari', 'Abonelikler otomatik yenilenir. Iptal icin App Store/Play Store kullanin.'],
+          ['Destek', 'E-posta: dorlion.ai26@gmail.com'],
         ].map(([lbl, msg]) => (
           <TouchableOpacity key={lbl} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.border }}
             onPress={() => Alert.alert(lbl, msg)}>
@@ -748,24 +669,19 @@ function AdminScreen({ isPremium, setIsPremium }: any) {
           </TouchableOpacity>
         ))}
       </View>
-
       <Text style={{ color: C.border, textAlign: 'center', marginTop: 24, fontSize: 11, lineHeight: 18 }}>
-        PrintPilot v1.0.0{'
-'}by Dorlion AI 🤖{'
-'}
-        Powered by Claude + Jarvis
+        PrintPilot v1.0.0 by Dorlion AI
       </Text>
     </ScrollView>
   );
 }
 
-// ===== ANA UYGULAMA =====
 const TABS = [
   { k: 'hesap', lbl: 'Hesap', ico: '🧮' },
-  { k: 'siparis', lbl: 'Siparişler', ico: '📋' },
-  { k: 'musteri', lbl: 'Müşteri', ico: '👥' },
+  { k: 'siparis', lbl: 'Siparisler', ico: '📋' },
+  { k: 'musteri', lbl: 'Musteri', ico: '👥' },
   { k: 'stok', lbl: 'Stok', ico: '🧵' },
-  { k: 'istat', lbl: 'İstatistik', ico: '📊' },
+  { k: 'istat', lbl: 'Istatistik', ico: '📊' },
   { k: 'admin', lbl: 'Admin', ico: '⚙️' },
 ];
 
@@ -779,11 +695,10 @@ export default function App() {
   const [gunlukCalc, setGunlukCalc] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Uygulama açılışında verileri yükle
   useEffect(() => {
     async function init() {
       try {
-        const [ob, sp, ms, st, gc] = await Promise.all([
+        const [ob, sp, ms, st2, gc] = await Promise.all([
           loadData(KEYS.onboarding, null),
           loadData(KEYS.siparisler, []),
           loadData(KEYS.musteriler, []),
@@ -793,13 +708,9 @@ export default function App() {
         setOnboarding(ob);
         setSiparisler(sp);
         setMusteriler(ms);
-        setStok(st);
-        // Günlük sayaç sıfırla
-        if (gc.date !== new Date().toDateString()) {
-          setGunlukCalc(0);
-        } else {
-          setGunlukCalc(gc.count || 0);
-        }
+        setStok(st2);
+        if (gc.date !== new Date().toDateString()) setGunlukCalc(0);
+        else setGunlukCalc(gc.count || 0);
       } catch {}
       setLoading(false);
     }
@@ -814,25 +725,18 @@ export default function App() {
     });
   }, []);
 
-  const onOnboardingDone = () => {
-    setOnboarding(true);
-    saveData(KEYS.onboarding, true);
-  };
+  if (loading) return (
+    <View style={{ flex: 1, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }}>
+      <StatusBar barStyle="light-content" backgroundColor={C.bg} />
+      <Text style={{ fontSize: 60 }}>🖨️</Text>
+      <Text style={{ color: C.primary, fontSize: 22, fontWeight: 'bold', marginTop: 16 }}>PrintPilot</Text>
+      <ActivityIndicator color={C.primary} style={{ marginTop: 24 }} />
+    </View>
+  );
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }}>
-        <StatusBar barStyle="light-content" backgroundColor={C.bg} />
-        <Text style={{ fontSize: 60 }}>🖨️</Text>
-        <Text style={{ color: C.primary, fontSize: 22, fontWeight: 'bold', marginTop: 16 }}>PrintPilot</Text>
-        <ActivityIndicator color={C.primary} style={{ marginTop: 24 }} />
-      </View>
-    );
-  }
-
-  if (!onboarding) {
-    return <OnboardingScreen onDone={onOnboardingDone} />;
-  }
+  if (!onboarding) return (
+    <OnboardingScreen onDone={() => { setOnboarding(true); saveData(KEYS.onboarding, true); }} />
+  );
 
   const renderScreen = () => {
     switch (tab) {
@@ -851,17 +755,13 @@ export default function App() {
       <StatusBar barStyle="light-content" backgroundColor={C.bg} />
       <View style={{ backgroundColor: C.surface, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View>
-          <Text style={{ color: C.primary, fontSize: 20, fontWeight: 'bold' }}>🖨️ PrintPilot</Text>
-          <Text style={{ color: C.sub, fontSize: 10 }}>3D Baskı Yönetim Merkezi</Text>
+          <Text style={{ color: C.primary, fontSize: 20, fontWeight: 'bold' }}>PrintPilot</Text>
+          <Text style={{ color: C.sub, fontSize: 10 }}>3D Baski Yonetim Merkezi</Text>
         </View>
-        <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-          {isPremium && (
-            <View style={{ backgroundColor: C.gold + '22', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 }}>
-              <Text style={{ color: C.gold, fontSize: 11, fontWeight: 'bold' }}>⭐ Premium</Text>
-            </View>
-          )}
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {isPremium && <View style={{ backgroundColor: C.gold + '22', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 }}><Text style={{ color: C.gold, fontSize: 11, fontWeight: 'bold' }}>Premium</Text></View>}
           <View style={{ backgroundColor: C.primary + '22', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 }}>
-            <Text style={{ color: C.primary, fontSize: 11, fontWeight: 'bold' }}>{siparisler.length} sipariş</Text>
+            <Text style={{ color: C.primary, fontSize: 11, fontWeight: 'bold' }}>{siparisler.length} siparis</Text>
           </View>
         </View>
       </View>
@@ -878,7 +778,7 @@ export default function App() {
   );
 }
 
-const s = StyleSheet.create({
+const st = StyleSheet.create({
   title: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 16 },
   card: { backgroundColor: '#1a1a2e', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#2D2D4E' },
   field: { marginBottom: 12 },
@@ -886,5 +786,5 @@ const s = StyleSheet.create({
   inp: { backgroundColor: '#16213e', color: '#fff', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#2D2D4E', fontSize: 14 },
   btn: { backgroundColor: '#6C5CE7', borderRadius: 12, padding: 14, alignItems: 'center' },
   btnTxt: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
-  secTitle: { color: '#A0A0B0', fontSize: 10, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 12 },
+  secTit: { color: '#A0A0B0', fontSize: 10, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 12 },
 });
