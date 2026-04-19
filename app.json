@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "scheme": "printpilot",
     "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
     "android": {
       "package": "com.dorlionai.printpilot",
       "permissions": [
@@ -16,9 +17,7 @@
       "expo-router"
     ],
     "extra": {
-      "router": {
-        "origin": false
-      },
+      "router": {},
       "eas": {
         "projectId": "d5e37579-d386-4d4b-af5c-7fd472414057"
       }
