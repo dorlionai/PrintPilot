@@ -3,20 +3,11 @@
     "name": "PrintPilot",
     "slug": "print-pilot",
     "version": "1.0.0",
+    "sdkVersion": "53.0.0",
     "orientation": "portrait",
     "scheme": "printpilot",
     "userInterfaceStyle": "automatic",
-    "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1a1a2e"
-    },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1a1a2e"
-      },
       "package": "com.dorlionai.printpilot",
       "permissions": [
         "INTERNET",
@@ -25,14 +16,7 @@
       ]
     },
     "plugins": [
-      "expo-router",
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/notification-icon.png",
-          "color": "#6C5CE7"
-        }
-      ]
+      "expo-router"
     ],
     "extra": {
       "eas": {
