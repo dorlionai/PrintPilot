@@ -3,22 +3,22 @@
     "name": "PrintPilot",
     "slug": "print-pilot",
     "version": "1.0.0",
-    "sdkVersion": "53.0.0",
     "orientation": "portrait",
     "scheme": "printpilot",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "android": {
       "package": "com.dorlionai.printpilot",
       "permissions": [
-        "INTERNET",
-        "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE"
+        "INTERNET"
       ]
     },
     "plugins": [
       "expo-router"
     ],
     "extra": {
+      "router": {
+        "origin": false
+      },
       "eas": {
         "projectId": "d5e37579-d386-4d4b-af5c-7fd472414057"
       }
