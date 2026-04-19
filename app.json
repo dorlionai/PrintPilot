@@ -45,8 +45,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "TODO_REPLACE_WITH_EXPO_UUID"
+        "projectId": "35ed9be8-5a48-4037-8a29-34e8e6e752be"
       }
-    }
+    },
+    "owner": "dorlion-ai"
   }
 }
