@@ -13,3 +13,4 @@ google-services.json
 google-play-service-account.json
 .env
 .env.local
+docs/CREDENTIALS.md
